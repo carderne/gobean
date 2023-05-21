@@ -1,0 +1,7 @@
+.git
+.github
+.gitignore
+Makefile
+README.md
+bin/
+*_test.go
