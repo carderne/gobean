@@ -14,8 +14,14 @@ Planned features:
 - [ ] Pad directives
 
 ## Usage
+Install:
+```bash
+go install github.com/carderne/gobean@latest
 ```
-$ go run .
+
+Run:
+```
+$ gobean
 
 NAME:
    gobean - A new cli application
@@ -32,18 +38,15 @@ GLOBAL OPTIONS:
    --help, -h  show help
 ```
 
-## Linting etc
+## Development
+Install deps:
 ```bash
-go vet ./...
-go fmt ./...
-golint ./...
-
-## Test
-```bash
-go test
+git clone git@github.com:carderne/gobean.git
+cd gobean
+go get .
 ```
 
-## Build
+### Build
 Requires at least Go `v1.21`.
 
 ```bash
@@ -51,8 +54,17 @@ Requires at least Go `v1.21`.
 make
 ```
 
+### Lint
+```bash
+make lint
+```
 
-## Docker (why?)
+### Test
+```bash
+make test
+```
+
+## Docker
 
 ```bash
 docker build --tag carderne/gobean .

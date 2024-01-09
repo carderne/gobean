@@ -1,0 +1,15 @@
+2023-01-01 open Assets:Bank                 GBP
+2023-01-03 open Expenses:Food               GBP
+2023-01-04 open Income:Job                  GBP
+
+2023-02-01 * "Salary"
+  Assets:Bank                          1000 GBP
+  Income:Job
+
+2023-02-02 * "Buy food"
+  Assets:Bank                          -100 GBP
+  Expenses:Food                         100 GBP
+
+2023-02-05 * "Shop" "More food"
+  Assets:Bank                        -40.00 GBP
+  Expenses:Food                       40.00 GBP

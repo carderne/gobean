@@ -25,4 +25,4 @@ watch:
 
 .PHONY: test
 test:
-	go test ./...
+	go test ./... -cover

@@ -11,8 +11,6 @@ import (
 // Debug indicates whether DEBUG env var is set to 1
 var Debug bool
 
-const dateLayout = "2006-01-02"
-
 func init() {
 	var err error
 	if err != nil {
@@ -50,6 +48,5 @@ func GetBalances(path string) (AccBal, error) {
 	if err != nil {
 		log.Fatal("Validate failed: ", err)
 	}
-	printAccBalances(accBalances)
 	return accBalances, nil
 }

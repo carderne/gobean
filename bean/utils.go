@@ -7,7 +7,7 @@ import (
 )
 
 func getDate(dateStr string) (time.Time, error) {
-	date, err := time.Parse(dateLayout, dateStr)
+	date, err := time.Parse(time.DateOnly, dateStr)
 	if err != nil {
 		return time.Time{}, fmt.Errorf("in getDate: %w", err)
 	}
@@ -25,7 +25,7 @@ func debugSlice[T fmt.Stringer](els []T, msg string) {
 	}
 }
 
-func printAccBalances(accBalances AccBal) {
+func PrintAccBalances(accBalances AccBal) {
 	for acc, bals := range accBalances {
 		fmt.Println(acc)
 		for ccy, num := range bals {

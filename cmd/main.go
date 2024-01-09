@@ -43,7 +43,11 @@ func Cmd() {
 						}
 					}()
 					path := cCtx.Args().First()
-					bean.GetBalances(path)
+					bals, err := bean.GetBalances(path)
+					if err != nil {
+						panic(err)
+					}
+					bean.PrintAccBalances(bals)
 					return nil
 				},
 			},

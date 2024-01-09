@@ -89,7 +89,7 @@ type Transaction struct {
 }
 
 func (t Transaction) String() string {
-	str := fmt.Sprintf("%s %s\n", t.Date.Format(dateLayout), t.Narration)
+	str := fmt.Sprintf("%s %s\n", t.Date.Format(time.DateOnly), t.Narration)
 	for _, p := range t.Postings {
 		str += fmt.Sprintf("  %v\n", p)
 	}
@@ -109,7 +109,7 @@ func (ae AccountEvent) String() string {
 	if ae.Open {
 		openOrClose = "open"
 	}
-	return fmt.Sprintf("%s %s %s %s\n", ae.Date.Format(dateLayout), openOrClose, ae.Account.Name, ae.Ccy)
+	return fmt.Sprintf("%s %s %s %s\n", ae.Date.Format(time.DateOnly), openOrClose, ae.Account.Name, ae.Ccy)
 }
 
 // Balance statement
@@ -120,7 +120,7 @@ type Balance struct {
 }
 
 func (b Balance) String() string {
-	return fmt.Sprintf("%s balance %s %v\n", b.Date.Format(dateLayout), b.Account.Name, b.Amount)
+	return fmt.Sprintf("%s balance %s %v\n", b.Date.Format(time.DateOnly), b.Account.Name, b.Amount)
 }
 
 // Ledger is the full view of the beancount file

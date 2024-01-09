@@ -7,6 +7,7 @@ require (
 	github.com/rs/zerolog v1.31.0
 	github.com/unrolled/render v1.6.1
 	github.com/urfave/cli/v2 v2.27.1
+	github.com/google/go-cmp v0.6.0
 )
 
 require (

@@ -3,13 +3,14 @@ package bean
 import (
 	"fmt"
 	"log"
+	"time"
 )
 
 // balanceTransaction checks that a Transaction balances for all ccys
 // The Posting _without_ an Amount (max one) will be used to auto-balance
 // any currencies that dont already balance.
 func balanceTransaction(transaction Transaction) (Transaction, error) {
-	log.Println("Balancing", transaction.Date.Format(dateLayout), transaction.Narration)
+	log.Println("Balancing", transaction.Date.Format(time.DateOnly), transaction.Narration)
 	ccyBalances := make(CcyBal, 3)
 	postings := make([]Posting, 0, len(transaction.Postings))
 	emptyPostingIndex := -1
