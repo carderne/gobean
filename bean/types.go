@@ -5,6 +5,12 @@ import (
 	"time"
 )
 
+// Ccy is a currency like USD or GOOG or WHATEVER
+type Ccy string
+
+// AccountName is of the form Assets:Bob:Investing:Etc
+type AccountName string
+
 // Token is raw token from input file with a bunch of flags
 // quotes are removed, newlines inside quotes are maintained
 type Token struct {
@@ -34,10 +40,19 @@ type Directive struct {
 	Lines []Line
 }
 
+func (d Directive) String() string {
+	str := ""
+	for _, l := range d.Lines {
+		str += fmt.Sprint(l, "\n")
+	}
+	str += "\n"
+	return str
+}
+
 // Amount is a number with a currency
 type Amount struct {
 	Number float64
-	Ccy    string
+	Ccy    Ccy
 }
 
 func (a Amount) String() string {
@@ -46,7 +61,7 @@ func (a Amount) String() string {
 
 // Account is for now simply a string
 type Account struct {
-	Full string
+	Name AccountName
 }
 
 // Posting is an individual leg of a transaction
@@ -61,7 +76,7 @@ func (p Posting) String() string {
 	if p.Amount != nil {
 		amountStr = fmt.Sprintf("%v", p.Amount)
 	}
-	return fmt.Sprintf("%v: %v", p.Account.Full, amountStr)
+	return fmt.Sprintf("%v: %v", p.Account.Name, amountStr)
 }
 
 // Transaction must have at least two postings
@@ -86,7 +101,7 @@ type AccountEvent struct {
 	Date    time.Time
 	Open    bool
 	Account Account
-	Ccy     string
+	Ccy     Ccy
 }
 
 func (ae AccountEvent) String() string {
@@ -94,7 +109,7 @@ func (ae AccountEvent) String() string {
 	if ae.Open {
 		openOrClose = "open"
 	}
-	return fmt.Sprintf("%s %s %s %s\n", ae.Date.Format(dateLayout), openOrClose, ae.Account.Full, ae.Ccy)
+	return fmt.Sprintf("%s %s %s %s\n", ae.Date.Format(dateLayout), openOrClose, ae.Account.Name, ae.Ccy)
 }
 
 // Balance statement
@@ -105,7 +120,7 @@ type Balance struct {
 }
 
 func (b Balance) String() string {
-	return fmt.Sprintf("%s balance %s %v\n", b.Date.Format(dateLayout), b.Account.Full, b.Amount)
+	return fmt.Sprintf("%s balance %s %v\n", b.Date.Format(dateLayout), b.Account.Name, b.Amount)
 }
 
 // Ledger is the full view of the beancount file
@@ -114,3 +129,9 @@ type Ledger struct {
 	Balances      []Balance
 	Transactions  []Transaction
 }
+
+// CcyBal is a map of Ccy -> number
+type CcyBal = map[Ccy]float64
+
+// AccBal is a map of Account -> CcyBal
+type AccBal = map[AccountName]CcyBal

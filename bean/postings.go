@@ -2,12 +2,8 @@ package bean
 
 import ()
 
-// CcyBal is a map of Ccy -> number
-type CcyBal = map[string]float64
-
-// AccBal is a map of Account -> CcyBal
-type AccBal = map[string]CcyBal
-
+// extractPostings flattens the Postings inside the slice of Transactions
+// into a single slice of Postings
 func extractPostings(transactions []Transaction) ([]Posting, error) {
 	postings := make([]Posting, 0, 2*len(transactions))
 	for _, t := range transactions {
@@ -19,10 +15,11 @@ func extractPostings(transactions []Transaction) ([]Posting, error) {
 	return postings, nil
 }
 
+// getBalances returns a map containing the balance for each account-ccy pair
 func getBalances(postings []Posting) (AccBal, error) {
 	bals := make(AccBal, 20)
 	for _, p := range postings {
-		acc := p.Account.Full
+		acc := p.Account.Name
 		val := p.Amount.Number
 		ccy := p.Amount.Ccy
 

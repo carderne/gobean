@@ -1,23 +1,20 @@
+// Package bean contains all beancount logic
+// Including parsing, validating, calculating etc
 package bean
 
 import (
 	"io"
 	"log"
 	"os"
-	"regexp"
 )
-
-var dateRegex *regexp.Regexp
 
 // Debug indicates whether DEBUG env var is set to 1
 var Debug bool
 
 const dateLayout = "2006-01-02"
-const datePattern = `^[0-9]{4}-[0-9]{2}-[0-9]{2}$`
 
 func init() {
 	var err error
-	dateRegex, err = regexp.Compile(datePattern)
 	if err != nil {
 		panic(err)
 	}
@@ -30,7 +27,8 @@ func init() {
 	}
 }
 
-// GetBalances returns the first balance statement from the file
+// GetBalances returns the final balance of
+// all accounts, separately for each currency
 func GetBalances(path string) (AccBal, error) {
 	ledger, err := parse(path)
 	if err != nil {
@@ -40,13 +38,13 @@ func GetBalances(path string) (AccBal, error) {
 	if err != nil {
 		log.Fatal("balanceTransactions failed: ", err)
 	}
-	debugSlice(ledger.Transactions)
+	debugSlice(ledger.Transactions, "ledger.Transactions")
 
 	postings, err := extractPostings(ledger.Transactions)
 	if err != nil {
 		log.Fatal("extractPostings failed: ", err)
 	}
-	debugSlice(postings)
+	debugSlice(postings, "postings")
 
 	accBalances, err := getBalances(postings)
 	if err != nil {

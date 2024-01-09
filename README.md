@@ -5,6 +5,8 @@ Basic [beancount](https://github.com/beancount/beancount) clone (one day...) wri
 Planned features:
 - [x] Parse beancount files
 - [x] Calculate account balances
+- [ ] Use [shopspring/decimal](https://github.com/shopspring/decimal)
+- [ ] Propagate line numbers for debugging
 - [ ] Validate against `open`/`close` directives
 - [ ] Open/close with multiple curencies
 - [ ] Validate against `balance` directives

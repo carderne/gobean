@@ -14,14 +14,14 @@ func getDate(dateStr string) (time.Time, error) {
 	return date, nil
 }
 
-func debugSlice[T fmt.Stringer](els []T) {
+func debugSlice[T fmt.Stringer](els []T, msg string) {
 	if Debug {
-		fmt.Println()
+		fmt.Println("--", msg)
 		for _, el := range els {
 			fmt.Print(el)
 			fmt.Println()
 		}
-		fmt.Println()
+		fmt.Println("-- END", msg)
 	}
 }
 
