@@ -3,9 +3,9 @@ package bean
 import (
 	"bufio"
 	"fmt"
+	"github.com/cockroachdb/apd/v3"
 	"log"
 	"os"
-	"strconv"
 	"unicode"
 )
 
@@ -255,7 +255,10 @@ func newBalance(directive Directive) (Balance, error) {
 	}
 	account := tokens[2].Text
 	numberStr := tokens[3].Text
-	number, _ := strconv.ParseFloat(string(numberStr), 64)
+	number, _, err := apd.NewFromString(numberStr)
+	if err != nil {
+		return Balance{}, fmt.Errorf("in newBalance: %w", err)
+	}
 	ccy := tokens[4].Text
 	if len(tokens) > 5 {
 		return Balance{}, fmt.Errorf("too many balance tokens: %s", directive)
@@ -265,7 +268,7 @@ func newBalance(directive Directive) (Balance, error) {
 		Date:    date,
 		Account: Account{AccountName(account)},
 		Amount: Amount{
-			Number: number,
+			Number: *number,
 			Ccy:    Ccy(ccy),
 		},
 	}
@@ -281,10 +284,13 @@ func newPosting(line Line) (Posting, error) {
 	var amount *Amount
 	if len(tokens) >= 3 {
 		numberStr := tokens[1].Text
-		number, _ := strconv.ParseFloat(string(numberStr), 64)
+		number, _, err := apd.NewFromString(numberStr)
+		if err != nil {
+			return Posting{}, fmt.Errorf("in newPosting: %w", err)
+		}
 		var ccy = tokens[2].Text
 		amount = &Amount{
-			Number: number,
+			Number: *number,
 			Ccy:    Ccy(ccy),
 		}
 	}

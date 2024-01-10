@@ -25,11 +25,12 @@ func debugSlice[T fmt.Stringer](els []T, msg string) {
 	}
 }
 
+// PrintAccBalances pretty prints account balances by currency
 func PrintAccBalances(accBalances AccBal) {
 	for acc, bals := range accBalances {
 		fmt.Println(acc)
 		for ccy, num := range bals {
-			fmt.Printf("  %.2f %s\n", num, ccy)
+			fmt.Printf("  %s %s\n", num.Text('f'), ccy)
 		}
 	}
 }

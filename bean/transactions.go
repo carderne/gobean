@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"log"
 	"time"
+
+	"github.com/cockroachdb/apd/v3"
 )
 
 // balanceTransaction checks that a Transaction balances for all ccys
@@ -22,7 +24,10 @@ func balanceTransaction(transaction Transaction) (Transaction, error) {
 			}
 			emptyPostingIndex = i
 		} else {
-			ccyBalances[p.Amount.Ccy] += p.Amount.Number
+			curVal := ccyBalances[p.Amount.Ccy]
+			newVal := apd.Decimal{}
+			apdCtx.Add(&newVal, &curVal, &p.Amount.Number)
+			ccyBalances[p.Amount.Ccy] = newVal
 			postings = append(postings, p)
 		}
 	}
@@ -33,10 +38,12 @@ func balanceTransaction(transaction Transaction) (Transaction, error) {
 		// and this makes the logic slightly easier
 		account := transaction.Postings[emptyPostingIndex].Account
 		for ccy, num := range ccyBalances {
+			neg := apd.Decimal{}
+			apdCtx.Neg(&neg, &num)
 			p := Posting{
 				Account: account,
 				Amount: &Amount{
-					Number: -num,
+					Number: neg,
 					Ccy:    ccy,
 				},
 			}

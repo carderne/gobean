@@ -1,6 +1,8 @@
 package bean
 
-import ()
+import (
+	"github.com/cockroachdb/apd/v3"
+)
 
 // extractPostings flattens the Postings inside the slice of Transactions
 // into a single slice of Postings
@@ -27,7 +29,10 @@ func getBalances(postings []Posting) (AccBal, error) {
 			bals[acc] = make(CcyBal, 3)
 		}
 
-		bals[acc][ccy] += val
+		curVal := bals[acc][ccy]
+		newVal := apd.Decimal{}
+		apdCtx.Add(&newVal, &curVal, &val)
+		bals[acc][ccy] = newVal
 	}
 	return bals, nil
 }

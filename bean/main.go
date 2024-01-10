@@ -3,6 +3,7 @@
 package bean
 
 import (
+	"github.com/cockroachdb/apd/v3"
 	"io"
 	"log"
 	"os"
@@ -11,11 +12,10 @@ import (
 // Debug indicates whether DEBUG env var is set to 1
 var Debug bool
 
+var apdCtx apd.Context
+
 func init() {
-	var err error
-	if err != nil {
-		panic(err)
-	}
+	apdCtx = apd.BaseContext
 
 	log.SetFlags(0)
 	log.SetOutput(io.Discard)

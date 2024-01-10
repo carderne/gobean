@@ -2,6 +2,7 @@ package bean
 
 import (
 	"fmt"
+	"github.com/cockroachdb/apd/v3"
 	"time"
 )
 
@@ -51,12 +52,12 @@ func (d Directive) String() string {
 
 // Amount is a number with a currency
 type Amount struct {
-	Number float64
+	Number apd.Decimal
 	Ccy    Ccy
 }
 
 func (a Amount) String() string {
-	return fmt.Sprintf("%.2f %s", a.Number, a.Ccy)
+	return fmt.Sprintf("%s %s", a.Number.Text('f'), a.Ccy)
 }
 
 // Account is for now simply a string
@@ -131,7 +132,17 @@ type Ledger struct {
 }
 
 // CcyBal is a map of Ccy -> number
-type CcyBal = map[Ccy]float64
+type CcyBal = map[Ccy]apd.Decimal
+
+// NewCcyBal converts a regular string map to a CcyBal
+func NewCcyBal(bals map[string]string) CcyBal {
+	res := make(CcyBal, len(bals))
+	for k, v := range bals {
+		d, _, _ := apdCtx.NewFromString(v)
+		res[Ccy(k)] = *d
+	}
+	return res
+}
 
 // AccBal is a map of Account -> CcyBal
 type AccBal = map[AccountName]CcyBal

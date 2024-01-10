@@ -12,7 +12,7 @@ func Test_getDate(t *testing.T) {
 		t.Errorf("incorrect result: expected %s, got %s", expected, res)
 	}
 
-  res, err := getDate("invalid")
+	res, err := getDate("invalid")
 	if err == nil {
 		t.Errorf("incorrect result: expected error")
 	}

@@ -3,11 +3,12 @@ module github.com/carderne/gobean
 go 1.21
 
 require (
+	github.com/cockroachdb/apd/v3 v3.2.1
 	github.com/go-chi/chi/v5 v5.0.11
+	github.com/google/go-cmp v0.6.0
 	github.com/rs/zerolog v1.31.0
 	github.com/unrolled/render v1.6.1
 	github.com/urfave/cli/v2 v2.27.1
-	github.com/google/go-cmp v0.6.0
 )
 
 require (
