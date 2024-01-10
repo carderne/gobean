@@ -38,6 +38,7 @@ func getTokens(path string) ([]Token, error) {
 		tokenQuoted bool   // whether last finished token was in quotes
 		indented    bool   // does the current token follow an indent
 	}
+	lineNum := 1
 	s := stateType{}
 
 	for scanner.Scan() {
@@ -54,18 +55,21 @@ func getTokens(path string) ([]Token, error) {
 			} else {
 				// dont add empty tokens
 				if s.current != "" {
-					tokens = append(tokens, Token{
+					t := Token{
 						Indent:  s.indented,
 						Quote:   s.tokenQuoted,
 						Comment: s.inComment,
+						LineNum: lineNum,
 						Text:    s.current,
-					})
+					}
+					tokens = append(tokens, t)
 					s = stateType{} // reset state
 				}
 				// insert EOL so that subsequent funcs can split lines
 				if isEOL {
 					tokens = append(tokens, Token{
-						EOL: true,
+						EOL:     true,
+						LineNum: lineNum,
 					})
 					s = stateType{} // reset state
 				}
@@ -78,12 +82,14 @@ func getTokens(path string) ([]Token, error) {
 			s.inQuotes = !s.inQuotes
 		} else if r == ";" || (r == "*" && onNewline) {
 			// * only counts as a comment if it's the first rune on a line
-			log.Println("COM", r)
 			s.inComment = true
 		} else {
 			s.current += r
 		}
 		s.prev = r
+		if isEOL {
+			lineNum += 1
+		}
 	}
 	if err := scanner.Err(); err != nil {
 		return nil, fmt.Errorf("in getTokens: %w", err)
@@ -108,6 +114,7 @@ func makeLines(tokens []Token) ([]Line, error) {
 			log.Printf("ignoring comment %s", t.Text)
 		} else if t.EOL {
 			// blank lines are semantically significant
+      // as they end directives
 			if prevToken.EOL {
 				lines = append(lines, Line{Blank: true})
 			}

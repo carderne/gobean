@@ -6,7 +6,7 @@ Planned features:
 - [x] Parse beancount files
 - [x] Calculate account balances
 - [x] Use Decimal
-- [ ] Propagate line numbers for debugging
+- [x] Propagate line numbers for debugging
 - [ ] Validate against `open`/`close` directives
 - [ ] Open/close with multiple curencies
 - [ ] Validate against `balance` directives

@@ -19,6 +19,7 @@ type Token struct {
 	Quote   bool
 	Comment bool
 	EOL     bool
+	LineNum int
 	Text    string
 }
 
@@ -28,8 +29,15 @@ type Line struct {
 	Tokens []Token
 }
 
+func (l Line) LineNum() int {
+	if l.Blank {
+		return 0
+	}
+	return l.Tokens[0].LineNum
+}
+
 func (l Line) String() string {
-	str := ""
+  str := fmt.Sprintf("line:%d", l.LineNum())
 	for _, t := range l.Tokens {
 		str += fmt.Sprint(" | ", t.Text)
 	}
@@ -39,6 +47,10 @@ func (l Line) String() string {
 // Directive is one or more lines that go together
 type Directive struct {
 	Lines []Line
+}
+
+func (d Directive) LineNum() int {
+	return d.Lines[0].Tokens[0].LineNum
 }
 
 func (d Directive) String() string {
