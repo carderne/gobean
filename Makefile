@@ -25,4 +25,8 @@ watch:
 
 .PHONY: test
 test:
-	go test ./... -cover
+	go test ./... -cover -coverprofile=c.out
+
+.PHONY: cov
+cov:
+	go tool cover -html="c.out"

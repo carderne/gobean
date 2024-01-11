@@ -3,8 +3,8 @@ package bean
 import (
 	"bufio"
 	"fmt"
+	"io"
 	"log"
-	"os"
 	"unicode"
 )
 
@@ -16,15 +16,8 @@ const eol = "\n"
 // and an EOL is added at the end
 // The result is a slice of tokens with EOLs that can be
 // used to separate lines
-func getTokens(path string) ([]Token, error) {
-	// TODO: accept an io.Reader instead
-	file, err := os.Open(path)
-	if err != nil {
-		return nil, fmt.Errorf("in getTokens: %w", err)
-	}
-	defer file.Close()
-
-	scanner := bufio.NewScanner(file)
+func getTokens(rc io.ReadCloser) ([]Token, error) {
+	scanner := bufio.NewScanner(rc)
 	scanner.Split(bufio.ScanRunes)
 
 	tokens := make([]Token, 0, 1000) // TODO: estimate size needed?
@@ -79,10 +72,11 @@ func getTokens(path string) ([]Token, error) {
 				s.tokenQuoted = true
 			}
 			s.inQuotes = !s.inQuotes
-		} else if r == ";" || (r == "*" && onNewline) {
-			// * only counts as a comment if it's the first rune on a line
-			s.inComment = true
 		} else {
+			if r == ";" || (r == "*" && onNewline) {
+				// * only counts as a comment if it's the first rune on a line
+				s.inComment = true
+			}
 			s.current += r
 		}
 		s.prev = r
@@ -91,13 +85,16 @@ func getTokens(path string) ([]Token, error) {
 		}
 	}
 	if err := scanner.Err(); err != nil {
-		return nil, fmt.Errorf("in getTokens: %w", err)
+		// havent seen this yet, lets be loud about it!
+		panic(fmt.Errorf("in getTokens: %w", err))
 	}
 	// manually added to make subsequent funcs lives easier
 	tokens = append(tokens, Token{
-		EOL: true,
+		LineNum: lineNum,
+		EOL:     true,
 	})
 	debugTokens(tokens)
+	rc.Close()
 	return tokens, nil
 }
 
@@ -321,10 +318,8 @@ func newTransaction(directive Directive) (Transaction, error) {
 
 	var postings []Posting
 	for _, line := range directive.Lines[1:] {
-		p, err := newPosting(line)
-		if err != nil {
-			return Transaction{}, fmt.Errorf("in newTransaction: %w", err)
-		}
+		// newPosting doesnt error currently
+		p, _ := newPosting(line)
 		postings = append(postings, p)
 	}
 
@@ -340,15 +335,11 @@ func newTransaction(directive Directive) (Transaction, error) {
 
 // parse does all the work of loading a file path
 // and returning a Ledger
-func parse(path string) (Ledger, error) {
-	tokens, err := getTokens(path)
-	if err != nil {
-		return Ledger{}, fmt.Errorf("in parse: %w", err)
-	}
-	lines, err := makeLines(tokens)
-	if err != nil {
-		return Ledger{}, fmt.Errorf("in parse: %w", err)
-	}
+func parse(rc io.ReadCloser) (Ledger, error) {
+	// getTokens never errors currently
+	tokens, _ := getTokens(rc)
+	// makeLines never errors currently
+	lines, _ := makeLines(tokens)
 	debugSlice(lines, "lines")
 	directives, err := makeDirectives(lines)
 	if err != nil {

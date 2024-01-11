@@ -45,7 +45,12 @@ func API(newPath string) {
 
 func balance(w http.ResponseWriter, r *http.Request) {
 	log.Debug().Str("Method", r.Method).Str("URL", r.URL.String()).Msg("Request")
-	bals, err := bean.GetBalances(path)
+	file, err := os.Open(path)
+	if err != nil {
+		panic(err)
+	}
+	defer file.Close()
+	bals, err := bean.NewBean(false).GetBalances(file)
 	if err != nil {
 		panic(err)
 	}

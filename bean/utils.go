@@ -15,7 +15,7 @@ func getDate(dateStr string) (time.Time, error) {
 }
 
 func debugSlice[T fmt.Stringer](els []T, msg string) {
-	if Debug {
+	if debug {
 		fmt.Println("--", msg)
 		for _, el := range els {
 			fmt.Print(el)
@@ -36,7 +36,7 @@ func PrintAccBalances(accBalances AccBal) {
 }
 
 func debugTokens(tokens []Token) {
-	if Debug {
+	if debug {
 		fmt.Println()
 		log.Println("debugTokens:")
 		for _, t := range tokens {

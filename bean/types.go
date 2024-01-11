@@ -16,11 +16,11 @@ type AccountName string
 // Token is raw token from input file with a bunch of flags
 // quotes are removed, newlines inside quotes are maintained
 type Token struct {
+	LineNum int
 	Indent  bool
 	Quote   bool
 	Comment bool
 	EOL     bool
-	LineNum int
 	Text    string
 }
 
@@ -33,7 +33,7 @@ type Line struct {
 // LineNum returns the source file line number of this Line
 func (l Line) LineNum() int {
 	if l.Blank {
-		return 0
+		return -1
 	}
 	return l.Tokens[0].LineNum
 }
@@ -54,7 +54,7 @@ type Directive struct {
 // LineNum returns the soruce file number of the
 // _first line_ of this line
 func (d Directive) LineNum() int {
-	return d.Lines[0].Tokens[0].LineNum
+	return d.Lines[0].LineNum()
 }
 
 func (d Directive) String() string {

@@ -3,50 +3,55 @@
 package bean
 
 import (
-	"github.com/cockroachdb/apd/v3"
+	"fmt"
 	"io"
 	"log"
 	"os"
+
+	"github.com/cockroachdb/apd/v3"
 )
 
-// Debug indicates whether DEBUG env var is set to 1
-var Debug bool
-
-var apdCtx apd.Context
-
 func init() {
-	apdCtx = apd.BaseContext
-
 	log.SetFlags(0)
 	log.SetOutput(io.Discard)
-	if os.Getenv("DEBUG") == "1" {
+}
+
+// debug indicates whether DEBUG env var is set to 1
+var debug bool
+
+// apd Decimal context
+var apdCtx = apd.BaseContext
+
+// Bean is empty for now but sure to grow!
+type Bean struct{}
+
+// NewBean returns an empty bean struct
+func NewBean(dbg bool) Bean {
+	debug = dbg
+	if debug {
 		log.SetOutput(os.Stderr)
-		Debug = true
 	}
+	return Bean{}
 }
 
 // GetBalances returns the final balance of
 // all accounts, separately for each currency
-func GetBalances(path string) (AccBal, error) {
-	ledger, err := parse(path)
+func (Bean) GetBalances(rc io.ReadCloser) (AccBal, error) {
+	ledger, err := parse(rc)
 	if err != nil {
-		log.Fatal("parse failed: ", err)
+		return nil, fmt.Errorf("in GetBalances: %w", err)
 	}
 	ledger.Transactions, err = balanceTransactions(ledger.Transactions)
 	if err != nil {
-		log.Fatal("balanceTransactions failed: ", err)
+		return nil, fmt.Errorf("in GetBalances: %w", err)
 	}
 	debugSlice(ledger.Transactions, "ledger.Transactions")
 
-	postings, err := extractPostings(ledger.Transactions)
-	if err != nil {
-		log.Fatal("extractPostings failed: ", err)
-	}
+	// extractPostings never errors currently
+	postings, _ := extractPostings(ledger.Transactions)
 	debugSlice(postings, "postings")
 
-	accBalances, err := getBalances(postings)
-	if err != nil {
-		log.Fatal("Validate failed: ", err)
-	}
+	// getBalances never errors currently
+	accBalances, _ := getBalances(postings)
 	return accBalances, nil
 }

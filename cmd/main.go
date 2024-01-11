@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"io"
 	"log"
 	"os"
 
@@ -9,6 +10,17 @@ import (
 	"github.com/carderne/gobean/bean"
 	"github.com/urfave/cli/v2"
 )
+
+var debug bool
+
+func init() {
+	log.SetFlags(0)
+	log.SetOutput(io.Discard)
+	if os.Getenv("DEBUG") == "1" {
+		log.SetOutput(os.Stderr)
+		debug = true
+	}
+}
 
 // Cmd creates the CLI interface
 func Cmd() {
@@ -35,7 +47,7 @@ func Cmd() {
 				Action: func(cCtx *cli.Context) error {
 					defer func() {
 						if v := recover(); v != nil {
-							if bean.Debug {
+							if debug {
 								panic(v)
 							} else {
 								fmt.Println("gobean crashed: ", v)
@@ -43,7 +55,12 @@ func Cmd() {
 						}
 					}()
 					path := cCtx.Args().First()
-					bals, err := bean.GetBalances(path)
+					file, err := os.Open(path)
+					if err != nil {
+						panic(err)
+					}
+					defer file.Close()
+					bals, err := bean.NewBean(debug).GetBalances(file)
 					if err != nil {
 						panic(err)
 					}

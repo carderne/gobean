@@ -7,10 +7,10 @@ import (
 
 func Test_getBalances(t *testing.T) {
 	postings := []Posting{}
-	res, _ := getBalances(postings)
-	expected := AccBal{}
+	got, _ := getBalances(postings)
+	want := AccBal{}
 
-	if diff := cmp.Diff(expected, res); diff != "" {
+	if diff := cmp.Diff(want, got); diff != "" {
 		t.Error(diff)
 	}
 }

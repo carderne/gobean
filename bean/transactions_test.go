@@ -11,7 +11,7 @@ import (
 func Test_balanceTransaction(t *testing.T) {
 	val1, _, _ := apd.NewFromString("100")
 	val2, _, _ := apd.NewFromString("-100")
-	transaction := Transaction{
+	want := Transaction{
 		Date:      time.Date(2022, time.January, 1, 0, 0, 0, 0, time.UTC),
 		Type:      "*",
 		Narration: "test",
@@ -26,9 +26,9 @@ func Test_balanceTransaction(t *testing.T) {
 			},
 		},
 	}
-	res, _ := balanceTransaction(transaction)
+	got, _ := balanceTransaction(want)
 
-	if diff := cmp.Diff(transaction, res, cmp.AllowUnexported(apd.BigInt{})); diff != "" {
+	if diff := cmp.Diff(want, got, cmp.AllowUnexported(apd.BigInt{})); diff != "" {
 		t.Error(diff)
 	}
 }
