@@ -2,6 +2,8 @@
 
 Basic [beancount](https://github.com/beancount/beancount) clone (one day...) written in Go.
 
+I'm deliberately writing this without looking at either the beancount source code _or_ general AST parsing guidelines.
+
 Planned features:
 - [x] Parse beancount files
 - [x] Calculate account balances
@@ -14,12 +16,12 @@ Planned features:
 - [ ] Pad directives
 
 ## Usage
-Install:
+### Install
 ```bash
 go install github.com/carderne/gobean@latest
 ```
 
-Run:
+### Run
 ```
 $ gobean
 
@@ -39,7 +41,7 @@ GLOBAL OPTIONS:
 ```
 
 ## Development
-Install deps:
+### Install dependencies
 ```bash
 git clone git@github.com:carderne/gobean.git
 cd gobean
