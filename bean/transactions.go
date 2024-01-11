@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"log"
 	"time"
-
-	"github.com/cockroachdb/apd/v3"
 )
 
 // balanceTransaction checks that a Transaction balances for all ccys
@@ -13,7 +11,7 @@ import (
 // any currencies that dont already balance.
 func balanceTransaction(transaction Transaction) (Transaction, error) {
 	log.Println("Balancing", transaction.Date.Format(time.DateOnly), transaction.Narration)
-	ccyBalances := make(CcyBal, 3)
+	ccyBalances := make(CcyAmount, 3)
 	postings := make([]Posting, 0, len(transaction.Postings))
 	emptyPostingIndex := -1
 	for i, p := range transaction.Postings {
@@ -24,10 +22,12 @@ func balanceTransaction(transaction Transaction) (Transaction, error) {
 			}
 			emptyPostingIndex = i
 		} else {
-			curVal := ccyBalances[p.Amount.Ccy]
-			newVal := apd.Decimal{}
-			apdCtx.Add(&newVal, &curVal, &p.Amount.Number)
-			ccyBalances[p.Amount.Ccy] = newVal
+			curVal, ok := ccyBalances[p.Amount.Ccy]
+			if ok {
+				ccyBalances[p.Amount.Ccy] = curVal.MustAdd(*p.Amount)
+			} else {
+				ccyBalances[p.Amount.Ccy] = *p.Amount
+			}
 			postings = append(postings, p)
 		}
 	}
@@ -37,15 +37,11 @@ func balanceTransaction(transaction Transaction) (Transaction, error) {
 		// because we will need more than 1 if there are multiple unbalanced ccys
 		// and this makes the logic slightly easier
 		account := transaction.Postings[emptyPostingIndex].Account
-		for ccy, num := range ccyBalances {
-			neg := apd.Decimal{}
-			apdCtx.Neg(&neg, &num)
+		for _, num := range ccyBalances {
+			neg := num.Neg()
 			p := Posting{
 				Account: account,
-				Amount: &Amount{
-					Number: neg,
-					Ccy:    ccy,
-				},
+				Amount:  &neg,
 			}
 			log.Printf("  new posting %v", p.String())
 			postings = append(postings, p)

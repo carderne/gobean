@@ -29,8 +29,8 @@ func debugSlice[T fmt.Stringer](els []T, msg string) {
 func PrintAccBalances(accBalances AccBal) {
 	for acc, bals := range accBalances {
 		fmt.Println(acc)
-		for ccy, num := range bals {
-			fmt.Printf("  %s %s\n", num.Text('f'), ccy)
+		for ccy, amt := range bals {
+			fmt.Printf("  %s %s\n", amt.Number.Text('f'), ccy)
 		}
 	}
 }

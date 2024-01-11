@@ -3,7 +3,6 @@ package bean
 import (
 	"bufio"
 	"fmt"
-	"github.com/cockroachdb/apd/v3"
 	"log"
 	"os"
 	"unicode"
@@ -88,7 +87,7 @@ func getTokens(path string) ([]Token, error) {
 		}
 		s.prev = r
 		if isEOL {
-			lineNum += 1
+			lineNum++
 		}
 	}
 	if err := scanner.Err(); err != nil {
@@ -114,7 +113,7 @@ func makeLines(tokens []Token) ([]Line, error) {
 			log.Printf("ignoring comment %s", t.Text)
 		} else if t.EOL {
 			// blank lines are semantically significant
-      // as they end directives
+			// as they end directives
 			if prevToken.EOL {
 				lines = append(lines, Line{Blank: true})
 			}
@@ -262,10 +261,6 @@ func newBalance(directive Directive) (Balance, error) {
 	}
 	account := tokens[2].Text
 	numberStr := tokens[3].Text
-	number, _, err := apd.NewFromString(numberStr)
-	if err != nil {
-		return Balance{}, fmt.Errorf("in newBalance: %w", err)
-	}
 	ccy := tokens[4].Text
 	if len(tokens) > 5 {
 		return Balance{}, fmt.Errorf("too many balance tokens: %s", directive)
@@ -274,10 +269,7 @@ func newBalance(directive Directive) (Balance, error) {
 	balance := Balance{
 		Date:    date,
 		Account: Account{AccountName(account)},
-		Amount: Amount{
-			Number: *number,
-			Ccy:    Ccy(ccy),
-		},
+		Amount:  MustNewAmount(numberStr, ccy),
 	}
 	return balance, nil
 }
@@ -291,15 +283,9 @@ func newPosting(line Line) (Posting, error) {
 	var amount *Amount
 	if len(tokens) >= 3 {
 		numberStr := tokens[1].Text
-		number, _, err := apd.NewFromString(numberStr)
-		if err != nil {
-			return Posting{}, fmt.Errorf("in newPosting: %w", err)
-		}
-		var ccy = tokens[2].Text
-		amount = &Amount{
-			Number: *number,
-			Ccy:    Ccy(ccy),
-		}
+		ccy := tokens[2].Text
+		amountVal := MustNewAmount(numberStr, ccy)
+		amount = &amountVal
 	}
 	posting := Posting{
 		Account: Account{AccountName(accountStr)},
