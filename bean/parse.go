@@ -10,6 +10,24 @@ import (
 
 const eol = "\n"
 
+type dirType string
+
+const (
+	dirOpen      dirType = "open"
+	dirClose     dirType = "close"
+	dirBalance   dirType = "balance"
+	dirTxn       dirType = "txn"
+	dirStar      dirType = "*"
+	dirBang      dirType = "!"
+	dirPrice     dirType = "price"
+	dirPad       dirType = "pad"
+	dirNote      dirType = "note"
+	dirCommodity dirType = "commodity"
+	dirQuery     dirType = "query"
+	dirCustom    dirType = "custom"
+	dirOption    dirType = "option"
+)
+
 // getTokens loads all text from the file at `path`
 // loading a single rune at a time.
 // Tokens are manually split on newlines and spaces
@@ -159,7 +177,7 @@ func makeDirectives(lines []Line) ([]Directive, error) {
 			} else {
 				curDirective.Lines = append(curDirective.Lines, line)
 			}
-		} else if line.Tokens[0].Text == "option" {
+		} else if line.Tokens[0].Text == string(dirOption) {
 			// TODO do something with options
 			log.Println("ignore: option")
 		} else {
@@ -184,26 +202,28 @@ func newLedger(directives []Directive) (Ledger, error) {
 		if len(directive.Lines) == 0 {
 			continue
 		}
-		switch typeStr := directive.Lines[0].Tokens[1].Text; typeStr {
-		case "balance":
+		switch typeStr := dirType(directive.Lines[0].Tokens[1].Text); typeStr {
+		case dirBalance:
 			d, err := newBalance(directive)
 			if err != nil {
 				return Ledger{}, fmt.Errorf("in newLedger: %w", err)
 			}
 			balances = append(balances, d)
-		case "open", "close":
+		case dirOpen, dirClose:
 			d, err := newAccountEvent(directive)
 			if err != nil {
 				return Ledger{}, fmt.Errorf("in newLedger: %w", err)
 			}
 			accountEvents = append(accountEvents, d)
-		case "pad", "price", "note", "commodity", "query", "custom":
-		default:
+		case dirPad, dirPrice, dirNote, dirCommodity, dirQuery, dirCustom:
+		case dirTxn, dirStar, dirBang:
 			d, err := newTransaction(directive)
 			if err != nil {
 				return Ledger{}, fmt.Errorf("in newLedger: %w", err)
 			}
 			transactions = append(transactions, d)
+		default:
+			return Ledger{}, fmt.Errorf("in NewLedger: found unrecognised directive: %s", typeStr)
 		}
 	}
 
