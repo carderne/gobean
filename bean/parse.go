@@ -197,6 +197,8 @@ func newLedger(directives []Directive) (Ledger, error) {
 	var accountEvents []AccountEvent
 	var balances []Balance
 	var transactions []Transaction
+	var prices []Price
+	var pads []Pad
 
 	for _, directive := range directives {
 		if len(directive.Lines) == 0 {
@@ -215,13 +217,25 @@ func newLedger(directives []Directive) (Ledger, error) {
 				return Ledger{}, fmt.Errorf("in newLedger: %w", err)
 			}
 			accountEvents = append(accountEvents, d)
-		case dirPad, dirPrice, dirNote, dirCommodity, dirQuery, dirCustom:
 		case dirTxn, dirStar, dirBang:
 			d, err := newTransaction(directive)
 			if err != nil {
 				return Ledger{}, fmt.Errorf("in newLedger: %w", err)
 			}
 			transactions = append(transactions, d)
+		case dirPrice:
+			d, err := newPrice(directive)
+			if err != nil {
+				return Ledger{}, fmt.Errorf("in newLedger: %w", err)
+			}
+			prices = append(prices, d)
+		case dirPad:
+			d, err := newPad(directive)
+			if err != nil {
+				return Ledger{}, fmt.Errorf("in newLedger: %w", err)
+			}
+			pads = append(pads, d)
+		case dirNote, dirCommodity, dirQuery, dirCustom:
 		default:
 			return Ledger{}, fmt.Errorf("in NewLedger: found unrecognised directive: %s", typeStr)
 		}
@@ -230,10 +244,14 @@ func newLedger(directives []Directive) (Ledger, error) {
 	debugSlice(transactions, "transactions")
 	debugSlice(accountEvents, "accountEvents")
 	debugSlice(balances, "balances")
+	debugSlice(prices, "prices")
+	debugSlice(pads, "pads")
 	ledger := Ledger{
 		accountEvents,
 		balances,
 		transactions,
+		prices,
+		pads,
 	}
 	return ledger, nil
 }
@@ -309,6 +327,44 @@ func newPosting(line Line) (Posting, error) {
 		Amount:  amount,
 	}
 	return posting, nil
+}
+
+// newPrice creates a Price
+func newPrice(directive Directive) (Price, error) {
+	tokens := directive.Lines[0].Tokens
+	log.Println("newPrice", tokens[0])
+	date, err := getDate(tokens[0].Text)
+	if err != nil {
+		return Price{}, fmt.Errorf("in newPrice: %w", err)
+	}
+	ccy := tokens[2].Text
+	amtNum := tokens[3].Text
+	amtCcy := tokens[4].Text
+	amt := MustNewAmount(amtNum, amtCcy)
+	price := Price{
+		Date:   date,
+		Ccy:    Ccy(ccy),
+		Amount: amt,
+	}
+	return price, nil
+}
+
+// newPad creates a Pad
+func newPad(directive Directive) (Pad, error) {
+	tokens := directive.Lines[0].Tokens
+	log.Println("newPad", tokens[0])
+	date, err := getDate(tokens[0].Text)
+	if err != nil {
+		return Pad{}, fmt.Errorf("in newPrice: %w", err)
+	}
+	padTo := Account{AccountName(tokens[2].Text)}
+	padFrom := Account{AccountName(tokens[3].Text)}
+	pad := Pad{
+		Date:    date,
+		PadTo:   padTo,
+		PadFrom: padFrom,
+	}
+	return pad, nil
 }
 
 // newTransaction creates a Transaction (with Postings)

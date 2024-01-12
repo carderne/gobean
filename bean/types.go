@@ -143,6 +143,10 @@ type Account struct {
 	Name AccountName
 }
 
+func (a Account) String() string {
+	return string(a.Name)
+}
+
 // Posting is an individual leg of a transaction
 type Posting struct {
 	Account     Account
@@ -207,6 +211,8 @@ type Ledger struct {
 	AccountEvents []AccountEvent
 	Balances      []Balance
 	Transactions  []Transaction
+	Prices        []Price
+	Pads          []Pad
 }
 
 // CcyAmount is a map of Ccy -> number
@@ -236,3 +242,25 @@ func MustNewCcyAmount(bals map[string]string) CcyAmount {
 
 // AccBal is a map of Account -> CcyBal
 type AccBal = map[AccountName]CcyAmount
+
+// Price contains an exchange rate between commodities
+type Price struct {
+	Date   time.Time
+	Ccy    Ccy
+	Amount Amount
+}
+
+func (p Price) String() string {
+	return fmt.Sprintf("%s price %s %v\n", p.Date.Format(time.DateOnly), p.Ccy, p.Amount)
+}
+
+// Pad is a pad directive
+type Pad struct {
+	Date    time.Time
+	PadTo   Account
+	PadFrom Account
+}
+
+func (p Pad) String() string {
+	return fmt.Sprintf("%s pad %s %v\n", p.Date.Format(time.DateOnly), p.PadTo, p.PadFrom)
+}

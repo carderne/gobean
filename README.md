@@ -9,11 +9,11 @@ Planned features:
 - [x] Calculate account balances
 - [x] Use Decimal
 - [x] Propagate line numbers for debugging
-- [ ] Validate against `open`/`close` directives
+- [x] Price directives
+- [x] Pad directives
+- [ ] Validate `balance` directives
+- [ ] Validate transactions against `open`/`close` directives
 - [ ] Open/close with multiple curencies
-- [ ] Validate against `balance` directives
-- [ ] Price directives
-- [ ] Pad directives
 
 ## Usage
 ### Install
