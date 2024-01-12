@@ -6,6 +6,65 @@ import (
 	"time"
 )
 
+// Transaction must have at least two postings
+type Transaction struct {
+	Date      time.Time
+	Type      string
+	Payee     string
+	Narration string
+	Postings  []Posting
+}
+
+func (t Transaction) String() string {
+	str := fmt.Sprintf("%s %s\n", t.Date.Format(time.DateOnly), t.Narration)
+	for _, p := range t.Postings {
+		str += fmt.Sprintf("  %v\n", p)
+	}
+	return str
+}
+
+// newTransaction creates a Transaction (with Postings)
+// from a Directive.
+func newTransaction(directive Directive) (Transaction, error) {
+	// first line is the root transaction line
+	rootLine := directive.Lines[0]
+	log.Println("newTransaction", rootLine.Tokens[0].Text)
+	tokens := rootLine.Tokens
+	date, err := getDate(tokens[0].Text)
+	if err != nil {
+		return Transaction{}, fmt.Errorf("in newTransaction: %w", err)
+	}
+	txType := tokens[1].Text
+
+	// If there is only one text, it is the narration
+	// if there are two, first is payee, second is narration.
+	// Dont ask me, I didn't design beancount!
+	narration := tokens[2].Text
+	var payee string
+	if len(tokens) >= 4 {
+		if tokens[3].Quote {
+			payee = narration
+			narration = tokens[3].Text
+		}
+	}
+
+	var postings []Posting
+	for _, line := range directive.Lines[1:] {
+		// newPosting doesnt error currently
+		p, _ := newPosting(line)
+		postings = append(postings, p)
+	}
+
+	transaction := Transaction{
+		Date:      date,
+		Type:      txType,
+		Payee:     payee,
+		Narration: narration,
+		Postings:  postings,
+	}
+	return transaction, nil
+}
+
 // balanceTransaction checks that a Transaction balances for all ccys
 // The Posting _without_ an Amount (max one) will be used to auto-balance
 // any currencies that dont already balance.

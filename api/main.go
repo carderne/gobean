@@ -1,3 +1,4 @@
+// Package api is a very basic HTTP API to gobean
 package api
 
 import (
@@ -50,7 +51,7 @@ func balance(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 	defer file.Close()
-	bals, err := bean.NewBean(false).GetBalances(file)
+	bals, err := bean.EmptyLedger(false).GetBalances(file)
 	if err != nil {
 		panic(err)
 	}

@@ -28,6 +28,59 @@ const (
 	dirOption    dirType = "option"
 )
 
+// Token is raw token from input file with a bunch of flags
+// quotes are removed, newlines inside quotes are maintained
+type Token struct {
+	LineNum int
+	Indent  bool
+	Quote   bool
+	Comment bool
+	EOL     bool
+	Text    string
+}
+
+// A Line from the beancount file
+type Line struct {
+	Blank  bool
+	Tokens []Token
+}
+
+// LineNum returns the source file line number of this Line
+func (l Line) LineNum() int {
+	if l.Blank {
+		return -1
+	}
+	return l.Tokens[0].LineNum
+}
+
+func (l Line) String() string {
+	str := fmt.Sprintf("line:%d", l.LineNum())
+	for _, t := range l.Tokens {
+		str += fmt.Sprint(" | ", t.Text)
+	}
+	return str
+}
+
+// Directive is one or more lines that go together
+type Directive struct {
+	Lines []Line
+}
+
+// LineNum returns the soruce file number of the
+// _first line_ of this line
+func (d Directive) LineNum() int {
+	return d.Lines[0].LineNum()
+}
+
+func (d Directive) String() string {
+	str := ""
+	for _, l := range d.Lines {
+		str += fmt.Sprint(l, "\n")
+	}
+	str += "\n"
+	return str
+}
+
 // getTokens loads all text from the file at `path`
 // loading a single rune at a time.
 // Tokens are manually split on newlines and spaces
@@ -188,244 +241,4 @@ func makeDirectives(lines []Line) ([]Directive, error) {
 	}
 	log.Println()
 	return directives, nil
-}
-
-// newLedger creates the basic ledger with
-// accountEvents (open/close), balance directives and transactions.
-// These are not yet logically validated, only checked semantically
-func newLedger(directives []Directive) (Ledger, error) {
-	var accountEvents []AccountEvent
-	var balances []Balance
-	var transactions []Transaction
-	var prices []Price
-	var pads []Pad
-
-	for _, directive := range directives {
-		if len(directive.Lines) == 0 {
-			continue
-		}
-		switch typeStr := dirType(directive.Lines[0].Tokens[1].Text); typeStr {
-		case dirBalance:
-			d, err := newBalance(directive)
-			if err != nil {
-				return Ledger{}, fmt.Errorf("in newLedger: %w", err)
-			}
-			balances = append(balances, d)
-		case dirOpen, dirClose:
-			d, err := newAccountEvent(directive)
-			if err != nil {
-				return Ledger{}, fmt.Errorf("in newLedger: %w", err)
-			}
-			accountEvents = append(accountEvents, d)
-		case dirTxn, dirStar, dirBang:
-			d, err := newTransaction(directive)
-			if err != nil {
-				return Ledger{}, fmt.Errorf("in newLedger: %w", err)
-			}
-			transactions = append(transactions, d)
-		case dirPrice:
-			d, err := newPrice(directive)
-			if err != nil {
-				return Ledger{}, fmt.Errorf("in newLedger: %w", err)
-			}
-			prices = append(prices, d)
-		case dirPad:
-			d, err := newPad(directive)
-			if err != nil {
-				return Ledger{}, fmt.Errorf("in newLedger: %w", err)
-			}
-			pads = append(pads, d)
-		case dirNote, dirCommodity, dirQuery, dirCustom:
-		default:
-			return Ledger{}, fmt.Errorf("in NewLedger: found unrecognised directive: %s", typeStr)
-		}
-	}
-
-	debugSlice(transactions, "transactions")
-	debugSlice(accountEvents, "accountEvents")
-	debugSlice(balances, "balances")
-	debugSlice(prices, "prices")
-	debugSlice(pads, "pads")
-	ledger := Ledger{
-		accountEvents,
-		balances,
-		transactions,
-		prices,
-		pads,
-	}
-	return ledger, nil
-}
-
-// newAccountEvent creates an AccountEvent from a Directive
-func newAccountEvent(directive Directive) (AccountEvent, error) {
-	line := directive.Lines[0] // TODO include metadata lines
-	log.Println("newAccountEvent", line.Tokens[0].Text)
-	tokens := line.Tokens
-	date, err := getDate(tokens[0].Text)
-	if err != nil {
-		return AccountEvent{}, fmt.Errorf("in newAccountEvent: %w", err)
-	}
-	open := tokens[1].Text == "open"
-	account := tokens[2].Text
-	var ccy Ccy
-	if len(tokens) >= 4 {
-		// TODO should return err if ccy provided on close
-		ccy = Ccy(tokens[3].Text)
-	}
-	if len(tokens) >= 5 {
-		// TODO handle additional currencies
-		log.Println("ignoring extra open/close tokens")
-	}
-	accountEvent := AccountEvent{
-		Date:    date,
-		Open:    open,
-		Account: Account{AccountName(account)},
-		Ccy:     ccy,
-	}
-	return accountEvent, nil
-}
-
-// newBalance creates a Balance from a Directive
-func newBalance(directive Directive) (Balance, error) {
-	line := directive.Lines[0] // TODO include metadata lines
-	log.Println("newBalance", line.Tokens[0].Text)
-	tokens := line.Tokens
-	date, err := getDate(tokens[0].Text)
-	if err != nil {
-		return Balance{}, fmt.Errorf("in newBalance: %w", err)
-	}
-	account := tokens[2].Text
-	numberStr := tokens[3].Text
-	ccy := tokens[4].Text
-	if len(tokens) > 5 {
-		return Balance{}, fmt.Errorf("too many balance tokens: %s", directive)
-	}
-
-	balance := Balance{
-		Date:    date,
-		Account: Account{AccountName(account)},
-		Amount:  MustNewAmount(numberStr, ccy),
-	}
-	return balance, nil
-}
-
-// newPosting creates a Posting from a Line
-// NB: Not from a Directive, as Postings are not directives!
-func newPosting(line Line) (Posting, error) {
-	log.Println("newPosting", line.Tokens[0].Text)
-	tokens := line.Tokens
-	accountStr := tokens[0].Text
-	var amount *Amount
-	if len(tokens) >= 3 {
-		numberStr := tokens[1].Text
-		ccy := tokens[2].Text
-		amountVal := MustNewAmount(numberStr, ccy)
-		amount = &amountVal
-	}
-	posting := Posting{
-		Account: Account{AccountName(accountStr)},
-		Amount:  amount,
-	}
-	return posting, nil
-}
-
-// newPrice creates a Price
-func newPrice(directive Directive) (Price, error) {
-	tokens := directive.Lines[0].Tokens
-	log.Println("newPrice", tokens[0])
-	date, err := getDate(tokens[0].Text)
-	if err != nil {
-		return Price{}, fmt.Errorf("in newPrice: %w", err)
-	}
-	ccy := tokens[2].Text
-	amtNum := tokens[3].Text
-	amtCcy := tokens[4].Text
-	amt := MustNewAmount(amtNum, amtCcy)
-	price := Price{
-		Date:   date,
-		Ccy:    Ccy(ccy),
-		Amount: amt,
-	}
-	return price, nil
-}
-
-// newPad creates a Pad
-func newPad(directive Directive) (Pad, error) {
-	tokens := directive.Lines[0].Tokens
-	log.Println("newPad", tokens[0])
-	date, err := getDate(tokens[0].Text)
-	if err != nil {
-		return Pad{}, fmt.Errorf("in newPrice: %w", err)
-	}
-	padTo := Account{AccountName(tokens[2].Text)}
-	padFrom := Account{AccountName(tokens[3].Text)}
-	pad := Pad{
-		Date:    date,
-		PadTo:   padTo,
-		PadFrom: padFrom,
-	}
-	return pad, nil
-}
-
-// newTransaction creates a Transaction (with Postings)
-// from a Directive.
-func newTransaction(directive Directive) (Transaction, error) {
-	// first line is the root transaction line
-	rootLine := directive.Lines[0]
-	log.Println("newTransaction", rootLine.Tokens[0].Text)
-	tokens := rootLine.Tokens
-	date, err := getDate(tokens[0].Text)
-	if err != nil {
-		return Transaction{}, fmt.Errorf("in newTransaction: %w", err)
-	}
-	txType := tokens[1].Text
-
-	// If there is only one text, it is the narration
-	// if there are two, first is payee, second is narration.
-	// Dont ask me, I didn't design beancount!
-	narration := tokens[2].Text
-	var payee string
-	if len(tokens) >= 4 {
-		if tokens[3].Quote {
-			payee = narration
-			narration = tokens[3].Text
-		}
-	}
-
-	var postings []Posting
-	for _, line := range directive.Lines[1:] {
-		// newPosting doesnt error currently
-		p, _ := newPosting(line)
-		postings = append(postings, p)
-	}
-
-	transaction := Transaction{
-		Date:      date,
-		Type:      txType,
-		Payee:     payee,
-		Narration: narration,
-		Postings:  postings,
-	}
-	return transaction, nil
-}
-
-// parse does all the work of loading a file path
-// and returning a Ledger
-func parse(rc io.ReadCloser) (Ledger, error) {
-	// getTokens never errors currently
-	tokens, _ := getTokens(rc)
-	// makeLines never errors currently
-	lines, _ := makeLines(tokens)
-	debugSlice(lines, "lines")
-	directives, err := makeDirectives(lines)
-	if err != nil {
-		return Ledger{}, fmt.Errorf("in parse: %w", err)
-	}
-	debugSlice(directives, "directives")
-
-	ledger, err := newLedger(directives)
-	if err != nil {
-		return Ledger{}, fmt.Errorf("in parse: %w", err)
-	}
-	return ledger, nil
 }

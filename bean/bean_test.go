@@ -10,9 +10,9 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
-func Test_NewBean(t *testing.T) {
+func Test_NewLedger(t *testing.T) {
 	// debug setting should be applied
-	_ = bean.NewBean(true)
+	_ = bean.EmptyLedger(true)
 }
 
 func Test_GetBalances(t *testing.T) {
@@ -23,7 +23,7 @@ func Test_GetBalances(t *testing.T) {
 	}
 	defer file.Close()
 
-	got, _ := bean.NewBean(false).GetBalances(file)
+	got, _ := bean.EmptyLedger(false).GetBalances(file)
 	want := bean.AccBal{
 		"Assets:Bank":   bean.MustNewCcyAmount(map[string]string{"GBP": "860.00"}),
 		"Income:Job":    bean.MustNewCcyAmount(map[string]string{"GBP": "-1000.00"}),
@@ -45,7 +45,7 @@ func Test_GetBalances(t *testing.T) {
   Income:Job
 `
 	rc := io.NopCloser(strings.NewReader(text))
-	_, err = bean.NewBean(false).GetBalances(rc)
+	_, err = bean.EmptyLedger(false).GetBalances(rc)
 	if err == nil {
 		t.Error("must fail with multiple blank postings")
 	}
@@ -55,7 +55,7 @@ func Test_GetBalances(t *testing.T) {
 2023 02 01 * "Salary" Assets:Bank
 `
 	rc = io.NopCloser(strings.NewReader(text))
-	_, err = bean.NewBean(false).GetBalances(rc)
+	_, err = bean.EmptyLedger(false).GetBalances(rc)
 	if err == nil {
 		t.Error("must fail with multiple blank postings")
 	}

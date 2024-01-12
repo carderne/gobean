@@ -1,3 +1,4 @@
+// Package cmd is the CLI entrypoint
 package cmd
 
 import (
@@ -60,7 +61,7 @@ func Cmd() {
 						panic(err)
 					}
 					defer file.Close()
-					bals, err := bean.NewBean(debug).GetBalances(file)
+					bals, err := bean.EmptyLedger(debug).GetBalances(file)
 					if err != nil {
 						panic(err)
 					}

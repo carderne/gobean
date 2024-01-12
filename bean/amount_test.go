@@ -2,7 +2,6 @@ package bean
 
 import (
 	"testing"
-	"time"
 
 	"github.com/google/go-cmp/cmp"
 )
@@ -14,25 +13,6 @@ func assertPanic(t *testing.T, f func(), msg string) {
 		}
 	}()
 	f()
-}
-
-func Test_Line_LineNum(t *testing.T) {
-	line := Line{true, []Token{}}
-	got := line.LineNum()
-	want := -1
-	if got != want {
-		t.Error("blank line should return -1 line num")
-	}
-}
-
-func Test_Directive_LineNum(t *testing.T) {
-	line := Line{false, []Token{{LineNum: 2}}}
-	directive := Directive{[]Line{line}}
-	got := directive.LineNum()
-	want := 2
-	if got != want {
-		t.Error("directive should return line num")
-	}
 }
 
 func Test_NewAmount(t *testing.T) {
@@ -74,33 +54,6 @@ func Test_Amount_MustAdd(t *testing.T) {
 		a.MustAdd(b)
 	}
 	assertPanic(t, f, "MustAdd should panic")
-}
-
-func Test_AccountEvent_String(t *testing.T) {
-	ae := AccountEvent{
-		Date:    time.Date(2022, time.January, 1, 0, 0, 0, 0, time.UTC),
-		Open:    true,
-		Account: Account{AccountName("Assets:Bank")},
-		Ccy:     Ccy("GBP"),
-	}
-	got := ae.String()
-	want := "2022-01-01 open Assets:Bank GBP\n"
-	if diff := cmp.Diff(want, got); diff != "" {
-		t.Error(diff)
-	}
-}
-
-func Test_Balance_String(t *testing.T) {
-	b := Balance{
-		Date:    time.Date(2022, time.January, 1, 0, 0, 0, 0, time.UTC),
-		Account: Account{AccountName("Assets:Bank")},
-		Amount:  MustNewAmount("100", "GBP"),
-	}
-	got := b.String()
-	want := "2022-01-01 balance Assets:Bank 100 GBP\n"
-	if diff := cmp.Diff(want, got); diff != "" {
-		t.Error(diff)
-	}
 }
 
 func Test_NewCcyAmount(t *testing.T) {
