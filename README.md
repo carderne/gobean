@@ -11,8 +11,8 @@ Planned features:
 - [x] Propagate line numbers for debugging
 - [x] Price directives
 - [x] Pad directives
+- [x] Validate transactions against `open`/`close` directives
 - [ ] Validate `balance` directives
-- [ ] Validate transactions against `open`/`close` directives
 - [ ] Open/close with multiple curencies
 
 ## Usage

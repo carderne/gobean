@@ -30,19 +30,19 @@ func TestNewLedger(t *testing.T) {
 			Amount:  MustNewAmount(num, ccy),
 		}},
 	}
-	got, _ := EmptyLedger(false).fill(directives)
+	got, _ := NewLedger(false).fill(directives)
 	comparer := cmp.Comparer(func(x, y Amount) bool {
 		return x.Eq(y)
 	})
-	if diff := cmp.Diff(want, got, comparer); diff != "" {
+	if diff := cmp.Diff(&want, got, comparer); diff != "" {
 		t.Error(diff)
 	}
 
 	// empty directive should be ignored
 	directives = []Directive{{[]Line{}}}
 	want = Ledger{}
-	got, _ = EmptyLedger(false).fill(directives)
-	if diff := cmp.Diff(want, got); diff != "" {
+	got, _ = NewLedger(false).fill(directives)
+	if diff := cmp.Diff(&want, got); diff != "" {
 		t.Error(diff)
 	}
 
@@ -57,7 +57,7 @@ func TestNewLedger(t *testing.T) {
 		}},
 	}}}
 	want = Ledger{}
-	_, err := EmptyLedger(false).fill(directives)
+	_, err := NewLedger(false).fill(directives)
 	if err == nil {
 		t.Error("invalid balance should raise")
 	}
@@ -73,7 +73,7 @@ func TestNewLedger(t *testing.T) {
 		}},
 	}}}
 	want = Ledger{}
-	_, err = EmptyLedger(false).fill(directives)
+	_, err = NewLedger(false).fill(directives)
 	if err == nil {
 		t.Error("invalid account event should raise")
 	}
@@ -87,7 +87,7 @@ func TestNewLedger(t *testing.T) {
 		}},
 	}}}
 	want = Ledger{}
-	_, err = EmptyLedger(false).fill(directives)
+	_, err = NewLedger(false).fill(directives)
 	if err == nil {
 		t.Error("invalid account event should raise")
 	}
@@ -99,7 +99,7 @@ func TestParse(t *testing.T) {
   Assets:Bank
 `
 	rc := io.NopCloser(strings.NewReader(text))
-	_, err := EmptyLedger(false).parse(rc)
+	_, err := NewLedger(false).parse(rc)
 	if err == nil {
 		t.Error("dangling indent should error")
 	}

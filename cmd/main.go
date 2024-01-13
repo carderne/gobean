@@ -6,6 +6,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"time"
 
 	"github.com/carderne/gobean/api"
 	"github.com/carderne/gobean/bean"
@@ -61,7 +62,13 @@ func Cmd() {
 						panic(err)
 					}
 					defer file.Close()
-					bals, err := bean.EmptyLedger(debug).GetBalances(file)
+					ledger := bean.NewLedger(debug)
+					_, err = ledger.Load(file)
+					if err != nil {
+						panic(err)
+					}
+					date := time.Now()
+					bals, err := ledger.GetBalances(date)
 					if err != nil {
 						panic(err)
 					}

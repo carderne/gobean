@@ -19,7 +19,7 @@ func TestGetDate(t *testing.T) {
 }
 
 func TestDebugSlice(t *testing.T) {
-	EmptyLedger(true)
+	NewLedger(true)
 	lines := []Line{
 		{Tokens: []Token{{Text: "hi"}}},
 	}
@@ -27,7 +27,7 @@ func TestDebugSlice(t *testing.T) {
 }
 
 func Test_PrintAccBalances(t *testing.T) {
-	EmptyLedger(true)
+	NewLedger(true)
 	bals := map[string]string{"GBP": "100"}
 	amt := MustNewCcyAmount(bals)
 	accbals := AccBal{"Assets:Bank": amt}
@@ -35,7 +35,7 @@ func Test_PrintAccBalances(t *testing.T) {
 }
 
 func TestDebugTokens(t *testing.T) {
-	EmptyLedger(true)
+	NewLedger(true)
 	tokens := []Token{{Text: "hi"}}
 	debugTokens(tokens)
 }

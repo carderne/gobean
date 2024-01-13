@@ -4,6 +4,7 @@ package api
 import (
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/unrolled/render"
@@ -51,7 +52,16 @@ func balance(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 	defer file.Close()
-	bals, err := bean.EmptyLedger(false).GetBalances(file)
+	ledger := bean.NewLedger(false)
+	_, err = ledger.Load(file)
+	if err != nil {
+		panic(err)
+	}
+	date := time.Now()
+	bals, err := ledger.GetBalances(date)
+	if err != nil {
+		panic(err)
+	}
 	if err != nil {
 		panic(err)
 	}

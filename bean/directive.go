@@ -6,51 +6,6 @@ import (
 	"time"
 )
 
-// AccountEvent is opening/closing accounts
-type AccountEvent struct {
-	Date    time.Time
-	Open    bool
-	Account Account
-	Ccy     Ccy
-}
-
-func (ae AccountEvent) String() string {
-	openOrClose := "close"
-	if ae.Open {
-		openOrClose = "open"
-	}
-	return fmt.Sprintf("%s %s %s %s\n", ae.Date.Format(time.DateOnly), openOrClose, ae.Account.Name, ae.Ccy)
-}
-
-// newAccountEvent creates an AccountEvent from a Directive
-func newAccountEvent(directive Directive) (AccountEvent, error) {
-	line := directive.Lines[0] // TODO include metadata lines
-	log.Println("newAccountEvent", line.Tokens[0].Text)
-	tokens := line.Tokens
-	date, err := getDate(tokens[0].Text)
-	if err != nil {
-		return AccountEvent{}, fmt.Errorf("in newAccountEvent: %w", err)
-	}
-	open := tokens[1].Text == "open"
-	account := tokens[2].Text
-	var ccy Ccy
-	if len(tokens) >= 4 {
-		// TODO should return err if ccy provided on close
-		ccy = Ccy(tokens[3].Text)
-	}
-	if len(tokens) >= 5 {
-		// TODO handle additional currencies
-		log.Println("ignoring extra open/close tokens")
-	}
-	accountEvent := AccountEvent{
-		Date:    date,
-		Open:    open,
-		Account: Account{AccountName(account)},
-		Ccy:     ccy,
-	}
-	return accountEvent, nil
-}
-
 // Balance statement
 type Balance struct {
 	Date    time.Time

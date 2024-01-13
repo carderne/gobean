@@ -1,10 +1,12 @@
 package bean_test
 
 import (
+	"fmt"
 	"io"
 	"os"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/carderne/gobean/bean"
 	"github.com/google/go-cmp/cmp"
@@ -12,7 +14,7 @@ import (
 
 func Test_NewLedger(t *testing.T) {
 	// debug setting should be applied
-	_ = bean.EmptyLedger(true)
+	_ = bean.NewLedger(true)
 }
 
 func Test_GetBalances(t *testing.T) {
@@ -23,7 +25,9 @@ func Test_GetBalances(t *testing.T) {
 	}
 	defer file.Close()
 
-	got, _ := bean.EmptyLedger(false).GetBalances(file)
+	date := time.Date(2023, time.March, 1, 0, 0, 0, 0, time.UTC)
+	l, _ := bean.NewLedger(false).Load(file)
+	got, _ := l.GetBalances(date)
 	want := bean.AccBal{
 		"Assets:Bank":   bean.MustNewCcyAmount(map[string]string{"GBP": "860.00"}),
 		"Income:Job":    bean.MustNewCcyAmount(map[string]string{"GBP": "-1000.00"}),
@@ -45,7 +49,9 @@ func Test_GetBalances(t *testing.T) {
   Income:Job
 `
 	rc := io.NopCloser(strings.NewReader(text))
-	_, err = bean.EmptyLedger(false).GetBalances(rc)
+	date = time.Date(2023, time.March, 1, 0, 0, 0, 0, time.UTC)
+	_, err = bean.NewLedger(false).Load(rc)
+	fmt.Println("AAAAAAA", l, err)
 	if err == nil {
 		t.Error("must fail with multiple blank postings")
 	}
@@ -55,8 +61,9 @@ func Test_GetBalances(t *testing.T) {
 2023 02 01 * "Salary" Assets:Bank
 `
 	rc = io.NopCloser(strings.NewReader(text))
-	_, err = bean.EmptyLedger(false).GetBalances(rc)
+	date = time.Date(2023, time.March, 1, 0, 0, 0, 0, time.UTC)
+	_, err = bean.NewLedger(false).Load(rc)
 	if err == nil {
-		t.Error("must fail with multiple blank postings")
+		t.Error("must fail with invalid file")
 	}
 }

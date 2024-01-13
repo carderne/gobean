@@ -3,6 +3,8 @@ package bean
 import (
 	"fmt"
 	"log"
+	"sort"
+	"time"
 )
 
 // Posting is an individual leg of a transaction
@@ -44,22 +46,35 @@ func (p Posting) String() string {
 // into a single slice of Postings
 func extractPostings(transactions []Transaction) ([]Posting, error) {
 	postings := make([]Posting, 0, 2*len(transactions))
-	for _, t := range transactions {
+	for i, t := range transactions {
 		for _, p := range t.Postings {
-			p.Transaction = &t
+			p.Transaction = &transactions[i]
 			postings = append(postings, p)
 		}
 	}
 	return postings, nil
 }
 
+// sortPostings must be applied before doing any calculations with the postings
+func sortPostings(postings []Posting) ([]Posting, error) {
+	sort.Slice(postings, func(i, j int) bool {
+		return postings[i].Transaction.Date.Before(postings[j].Transaction.Date)
+	})
+	return postings, nil
+}
+
 // getBalances returns a map containing the balance for each account-ccy pair
-func getBalances(postings []Posting) (AccBal, error) {
+func getBalances(postings []Posting, atl AccountTimeLine, date time.Time) (AccBal, error) {
 	bals := make(AccBal, 20)
 	for _, p := range postings {
 		acc := p.Account.Name
 		num := p.Amount.Number
 		ccy := p.Amount.Ccy
+
+		open := openAtDate(atl, p)
+		if !open {
+			return nil, fmt.Errorf("account %s not open at date %s", p.Account, p.Transaction.Date.Format(time.DateOnly))
+		}
 
 		if bals[acc] == nil {
 			bals[acc] = make(CcyAmount, 3)
