@@ -2,13 +2,16 @@
 
 Basic [beancount](https://github.com/beancount/beancount) clone (one day...) written in Go.
 
-I'm deliberately writing this without looking at either the beancount source code _or_ general AST parsing guidelines.
+I'm deliberately writing this without looking at the beancount source code, or trying too hard to build a proper lexer or AST (because I'm trying to have fun).
+
+Go is a terrible choice for this particular problem (limited switch/pattern matching, and no enum/union types) so I'm not sure how far I'll go with this...
 
 Planned features:
 - [x] Parse beancount files
 - [x] Calculate account balances
 - [x] Use Decimal
 - [x] Propagate line numbers for debugging
+- [x] Stricter transaction keywords
 - [x] Price directives
 - [x] Pad directives
 - [x] Validate transactions against `open`/`close` directives
