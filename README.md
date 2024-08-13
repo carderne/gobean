@@ -1,5 +1,7 @@
 # gobean
 
+**Notice: I'm slowly continuing this in Rust over here: [carderne/bean-rs](https://github.com/carderne/bean-rs).**
+
 Basic [beancount](https://github.com/beancount/beancount) clone (one day...) written in Go.
 
 I'm deliberately writing this without looking at the beancount source code, or trying too hard to build a proper lexer or AST (because I'm trying to have fun).
